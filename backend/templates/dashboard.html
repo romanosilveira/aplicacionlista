@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head><title>Dashboard</title></head>
+<body>
+    <h2>Bienvenido, {{ username }}</h2>
+    <p>Esta es tu página protegida.</p>
+    <button id="logout-btn">Cerrar sesión</button>
+
+    <script>
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        localStorage.removeItem('jwtToken');
+        window.location.href = '/';
+    });
+
+    // Ejemplo: Obtener tareas protegidas con token
+    async function fetchTasks() {
+        const token = localStorage.getItem('jwtToken');
+        if (!token) {
+            alert('No estás autenticado');
+            window.location.href = '/';
+            return;
+        }
+        try {
+            const response = await fetch('/api/tasks', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) {
+                throw new Error('No autorizado');
+            }
+            const tasks = await response.json();
+            console.log('Tareas:', tasks);
+        } catch (err) {
+            alert('Error al obtener tareas');
+            console.error(err);
+        }
+    }
+    fetchTasks();
+    </script>
+</body>
+</html>
+
