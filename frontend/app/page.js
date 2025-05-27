@@ -1,18 +1,22 @@
-'use client'
+'use client';
 
 import { useContext, useEffect, useState } from 'react';
 import { AuthContext } from '../context/AuthContext';
 import { useRouter } from 'next/navigation';
 
-const API_URL = 'http://localhost:8000/api/tasks';  // URL completa backend
+const API_URL = 'http://localhost:8000/api/tasks';
 
 export default function Home() {
   const { user, logout } = useContext(AuthContext);
   const router = useRouter();
 
   const [tasks, setTasks] = useState([]);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [loading, setLoading] = useState(true);
+
+  // Inputs para nueva tarea
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [dueDate, setDueDate] = useState('');
 
   useEffect(() => {
     if (!user) {
@@ -21,50 +25,53 @@ export default function Home() {
     }
 
     const token = localStorage.getItem('token');
-    console.log('Token enviado:', token);
 
     fetch(API_URL, {
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error('Error al obtener tareas');
         return res.json();
       })
-      .then(data => {
+      .then((data) => {
         setTasks(data);
         setLoading(false);
       })
-      .catch(e => {
+      .catch((e) => {
         console.error(e);
         setLoading(false);
       });
   }, [user, router]);
-
+console.log('user', tasks);
   if (!user) return null;
 
   const handleAddTask = () => {
-    if (!newTaskTitle.trim()) return;
+    if (!title.trim()) return alert('El título es obligatorio');
 
     const token = localStorage.getItem('token');
-    const newTask = { title: newTaskTitle.trim(), description: '' };
+    const newTask = {
+      title: title.trim(),
+      description: description.trim(),
+      due_date: dueDate || null,
+    };
 
     fetch(API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`
+        Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify(newTask)
+      body: JSON.stringify(newTask),
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error('Error al crear tarea');
         return res.json();
       })
-      .then(createdTask => {
-        setTasks(prev => [...prev, createdTask]);
-        setNewTaskTitle('');
+      .then((createdTask) => {
+        setTasks((prev) => [...prev, createdTask]);
+        setTitle('');
+        setDescription('');
+        setDueDate('');
       })
       .catch(console.error);
   };
@@ -74,19 +81,17 @@ export default function Home() {
 
     fetch(`${API_URL}/${id}`, {
       method: 'DELETE',
-      headers: {
-        'Authorization': `Bearer ${token}`
-      }
+      headers: { Authorization: `Bearer ${token}` },
     })
-      .then(res => {
+      .then((res) => {
         if (!res.ok) throw new Error('Error al eliminar tarea');
-        setTasks(prev => prev.filter(task => task.id !== id));
+        setTasks((prev) => prev.filter((task) => task.id !== id));
       })
       .catch(console.error);
   };
 
   return (
-    <main className="p-8">
+    <main className="p-8 max-w-4xl mx-auto">
       <h1 className="text-2xl font-bold mb-4">Tareas de {user.username}</h1>
 
       <button
@@ -100,39 +105,74 @@ export default function Home() {
         <p>Cargando tareas...</p>
       ) : (
         <>
-          <ul className="mb-4">
-            {tasks.length === 0 && <p>No hay tareas.</p>}
-            {tasks.map(task => (
-              <li
-                key={task.id}
-                className="flex justify-between items-center mb-2 border p-2 rounded"
-              >
-                <span>{task.title}</span>
-                <button
-                  onClick={() => handleDeleteTask(task.id)}
-                  className="text-red-600 hover:text-red-800"
-                >
-                  Eliminar
-                </button>
-              </li>
-            ))}
-          </ul>
+          {tasks.length === 0 ? (
+            <p>No hay tareas.</p>
+          ) : (
+            <table className="min-w-full bg-white rounded shadow overflow-x-auto">
+              <thead>
+                <tr className="bg-gray-200">
+                  <th className="text-left py-2 px-4">Título</th>
+                  <th className="text-left py-2 px-4">Descripción</th>
+                  <th className="text-left py-2 px-4">Fecha de ejecución</th>
+                  <th className="py-2 px-4"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {tasks.map(({ id, title, description, due_date }) => (
+                  <tr key={id} className="border-t">
+                    <td className="py-2 px-4">{title}</td>
+                    <td className="py-2 px-4">{description || '-'}</td>
+                    <td className="py-2 px-4">
+                      {due_date ? new Date(due_date).toLocaleDateString() : '-'}
+                    </td>
+                    <td className="py-2 px-4 text-right">
+                      <button
+                        onClick={() => handleDeleteTask(id)}
+                        className="text-red-600 hover:text-red-800"
+                      >
+                        Eliminar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
 
-          <div className="flex gap-2">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleAddTask();
+            }}
+            className="mt-6 flex flex-col gap-3"
+          >
             <input
               type="text"
-              placeholder="Nueva tarea"
-              value={newTaskTitle}
-              onChange={e => setNewTaskTitle(e.target.value)}
-              className="border p-2 rounded flex-grow"
+              placeholder="Título *"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              className="border p-2 rounded"
+              required
+            />
+            <textarea
+              placeholder="Descripción"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              className="border p-2 rounded"
+            />
+            <input
+              type="date"
+              value={dueDate}
+              onChange={(e) => setDueDate(e.target.value)}
+              className="border p-2 rounded"
             />
             <button
-              onClick={handleAddTask}
+              type="submit"
               className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
             >
-              Añadir
+              Añadir Tarea
             </button>
-          </div>
+          </form>
         </>
       )}
     </main>

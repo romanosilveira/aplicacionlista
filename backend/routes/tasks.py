@@ -6,7 +6,7 @@ tasks_bp = Blueprint('tasks', __name__)
 # Base de datos temporal en memoria
 fake_tasks_db = {
     "usuario": [
-        {"id": 1, "title": "Ejemplo tarea", "description": "Descripción de ejemplo"}
+        {"id": 1, "title": "Ejemplo tarea", "description": "Descripción de ejemplo", "execution_date": ""}
     ]
 }
 
@@ -29,17 +29,19 @@ def get_tasks():
 def create_task():
     current_user = get_jwt_identity()
     data = request.get_json()
-    
+
     title = data.get('title', '').strip()
     description = data.get('description', '').strip() if data.get('description') else ''
+    execution_date = data.get('execution_date', '').strip() if data.get('execution_date') else ''
 
     if not title:
         return jsonify({"message": "El título es obligatorio"}), 400
-    
+
     new_task = {
         "id": get_next_task_id(current_user),
         "title": title,
-        "description": description
+        "description": description,
+        "execution_date": execution_date
     }
     if current_user not in fake_tasks_db:
         fake_tasks_db[current_user] = []
@@ -59,4 +61,3 @@ def delete_task(task_id):
 
     fake_tasks_db[current_user] = [t for t in tasks if t["id"] != task_id]
     return jsonify({"message": "Tarea eliminada"}), 200
-
