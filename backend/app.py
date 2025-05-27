@@ -11,9 +11,12 @@ load_dotenv()
 app = Flask(__name__)
 app.config.from_object('config')
 
-# CORS y JWT
-CORS(app, resources={r"/api/*": {"origins": "http://localhost:3000"}})
-jwt = JWTManager(app)
+origins = [
+    "http://localhost:3000",
+    "http://10.123.2.15:3000",
+    "http://10.123.2.15:3001",
+]
+
 
 # Ruta simple para pruebas
 @app.route('/')

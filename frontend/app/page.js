@@ -20,8 +20,9 @@ export default function Home() {
       return;
     }
 
-    const token = localStorage.getItem('jwtToken');
-    
+    const token = localStorage.getItem('token');
+    console.log('Token enviado:', token);
+
     fetch(API_URL, {
       headers: {
         'Authorization': `Bearer ${token}`
@@ -46,7 +47,7 @@ export default function Home() {
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) return;
 
-    const token = localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('token');
     const newTask = { title: newTaskTitle.trim(), description: '' };
 
     fetch(API_URL, {
@@ -69,7 +70,7 @@ export default function Home() {
   };
 
   const handleDeleteTask = (id) => {
-    const token = localStorage.getItem('jwtToken');
+    const token = localStorage.getItem('token');
 
     fetch(`${API_URL}/${id}`, {
       method: 'DELETE',

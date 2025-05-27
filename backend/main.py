@@ -100,10 +100,15 @@ class Task(BaseModel):
 def get_tasks(username: str = Depends(verify_token)):
     return fake_tasks_db.get(username, [])
 
-@app.post("/api/tasks", response_model=Task)
+@app.post("/api/tasks")
 def create_task(task: TaskCreate, username: str = Depends(verify_token)):
     task_id = str(uuid4())
-    return jsonify('test')
+    new_task = Task(id=task_id, title=task.title, description=task.description, owner=username)
+    if username not in fake_tasks_db:
+        fake_tasks_db[username] = []
+    fake_tasks_db[username].append(new_task)
+    return fake_tasks_db[username]  # devuelve lista completa
+
 @app.delete("/api/tasks/{task_id}", status_code=204)
 def delete_task(task_id: str, username: str = Depends(verify_token)):
     tasks = fake_tasks_db.get(username, [])

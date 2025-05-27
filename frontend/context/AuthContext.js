@@ -1,4 +1,5 @@
 'use client';
+
 import { createContext, useState, useEffect } from 'react';
 
 export const AuthContext = createContext();
@@ -27,6 +28,7 @@ export function AuthProvider({ children }) {
       localStorage.setItem('token', data.token);
       localStorage.setItem('user', JSON.stringify({ username }));
       setUser({ username });
+
       return true;
     } catch (error) {
       console.error('Error en login:', error);
