@@ -1,4 +1,4 @@
-import '../styles/globals.css';
+import "./globals.css";;
 import { AuthProvider } from '../context/AuthContext'; // ✅ named import corregido
 
 export const metadata = {
@@ -17,6 +17,3 @@ export default function RootLayout({ children }) {
     </html>
   );
 }
-
-
-

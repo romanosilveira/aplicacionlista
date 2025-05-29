@@ -1,6 +1,4 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 /* Estilos base globales */
 body {
@@ -13,5 +11,14 @@ h1, h2, h3, h4, h5, h6 {
 
 button {
   @apply transition duration-200 ease-in-out;
+}
+
+/* Transición suave para inputs */
+input {
+  @apply transition-shadow duration-300 ease-in-out;
+}
+
+input:focus {
+  @apply shadow-lg;
 }
 
