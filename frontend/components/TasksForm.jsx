@@ -1,41 +1,48 @@
-import { useState } from "react";
+'use client';
 
-export default function TaskForm({ tasks, setTasks }) {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
+import { useState, useContext } from 'react';
+import { useRouter } from 'next/navigation';
+import { AuthContext } from '../context/AuthContext';
+
+const API_URL = 'http://localhost:8000/api/tasks';
+
+export default function TaskForm() {
+  const { user } = useContext(AuthContext);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleAddTask = async (e) => {
     e.preventDefault();
+
     if (!title.trim() || !description.trim()) {
-      setError("Título y descripción son obligatorios");
+      setError('Título y descripción son obligatorios');
       return;
     }
+
     setLoading(true);
     setError(null);
 
     try {
-      const token = localStorage.getItem("token");
-      const res = await fetch("http://10.123.2.15:8000/api/tasks", {
-        method: "POST",
+      const token = localStorage.getItem('token');
+      const res = await fetch(API_URL, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ title: title.trim(), description: description.trim() }),
+        body: JSON.stringify({
+          title: title.trim(),
+          description: description.trim(),
+        }),
       });
-      // ... resto del código
-    } catch (error) {
-      // manejo del error
-    }
-    
-      if (!res.ok) throw new Error("Error al crear la tarea");
 
-      const newTask = await res.json();
-      setTasks([...tasks, newTask]);
-      setTitle("");
-      setDescription("");
+      if (!res.ok) throw new Error('Error al crear la tarea');
+
+      // Redirigir al home tras crear
+      router.push('/');
     } catch (err) {
       setError(err.message);
     } finally {
@@ -44,32 +51,36 @@ export default function TaskForm({ tasks, setTasks }) {
   };
 
   return (
-    <form
-      onSubmit={handleAddTask}
-      className="bg-white dark:bg-gray-800 p-6 rounded shadow-md w-full max-w-md mb-8"
-    >
-      {error && <p className="text-red-500 mb-3">{error}</p>}
-      <input
-        type="text"
-        placeholder="Título"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        required
-        className="w-full mb-3 px-3 py-2 border border-gray-300 rounded dark:bg-gray-700 dark:text-white"
-      />
-      <textarea
-        placeholder="Descripción"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        required
-        className="w-full mb-3 px-3 py-2 border border-gray-300 rounded dark:bg-gray-700 dark:text-white"
-      />
+    <form onSubmit={handleAddTask} className="max-w-xl mx-auto p-6 space-y-4 bg-white shadow rounded">
+      <h2 className="text-xl font-bold">Añadir nueva tarea</h2>
+
+      {error && <p className="text-red-600">{error}</p>}
+
+      <div>
+        <label className="block text-sm font-medium">Título</label>
+        <input
+          type="text"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+
+      <div>
+        <label className="block text-sm font-medium">Descripción</label>
+        <textarea
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full p-2 border rounded"
+        />
+      </div>
+
       <button
         type="submit"
+        className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
         disabled={loading}
-        className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-50 text-white font-semibold py-2 rounded"
       >
-        {loading ? "Añadiendo..." : "Añadir Tarea"}
+        {loading ? 'Guardando...' : 'Agregar tarea'}
       </button>
     </form>
   );
